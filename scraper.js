@@ -1,13 +1,6 @@
 const puppeteer = require("puppeteer");
 
-function delay(time) {
-  return new Promise(function (resolve) {
-    setTimeout(resolve, time);
-  });
-}
-
-async function scraper() {
-  const brand = "nike";
+export default async function scraper(brand) {
   const browser = await puppeteer.launch({
     headless: true,
     defaultViewport: null,
@@ -78,8 +71,11 @@ async function scraper() {
     }
   }
 
-  console.log("users", users);
   await browser.close();
+
+  return users;
 }
 
-scraper();
+export const helper = function () {
+  console.log("hello");
+};
