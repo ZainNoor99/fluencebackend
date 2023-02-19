@@ -6,7 +6,8 @@ function delay(time) {
   });
 }
 
-async function scraper() {
+async function scraper(inputBrand = "Nike") {
+  console.log("brand!", inputBrand);
   const brand = "nike";
   const browser = await puppeteer.launch({
     headless: true,
@@ -17,7 +18,7 @@ async function scraper() {
   await page.goto(
     `https://www.tiktok.com/search?q=paid%20partnership%2C%20${encodeURIComponent(
       brand
-    )}`
+    )}&t=${Date.now()}`
   );
 
   await page.waitForSelector('button[data-e2e="search-load-more"]', {
@@ -80,6 +81,12 @@ async function scraper() {
 
   console.log("users", users);
   await browser.close();
+
+  return users;
 }
 
-scraper();
+// scraper();
+
+module.exports = {
+  scraper: scraper
+};
