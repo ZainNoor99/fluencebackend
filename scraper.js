@@ -29,19 +29,22 @@ async function scraper(inputBrand = "Nike") {
   });
   const page = await browser.newPage();
   await page.goto(
-    `https://www.tiktok.com/search?q=partner%2C%20${encodeURIComponent(
+    `https://www.tiktok.com/search?q=paid%20partnership%2C%20${encodeURIComponent(
       inputBrand
     )}&t=${Date.now()}`
   );
 
   let i = 0;
-  while (i < 1) {
-    await page.waitForSelector('button[data-e2e="search-load-more"]', {
-      visible: true,
-    });
+  while (i < 10) {
+    try {
+      await page.waitForSelector('button[data-e2e="search-load-more"]', {
+        visible: true,
+      });
 
-    await page.click('button[data-e2e="search-load-more"]');
-    i++;
+      await page.click('button[data-e2e="search-load-more"]');
+    } catch (error) {
+      break;
+    }
   }
 
   const users = [];
@@ -77,14 +80,17 @@ async function scraper(inputBrand = "Nike") {
       //add the keywords:
       // collab
       (desc.includes("paidpartnership") ||
-        desc.includes("ad") ||
+        // desc.includes("ad") ||
         //dont really use this keyword
-        desc.includes("advertisement") ||
+        // desc.includes("advertisement") ||
         desc.includes("partnered") ||
         desc.includes("collab") ||
         desc.includes("collabed") ||
         desc.includes("collaboration") ||
         desc.includes("partnership") ||
+        desc.includes(
+          `${inputBrand.replaceAll(/\s/g, "").toLowerCase()}partner`
+        ) ||
         desc.includes("paid partnership")) &&
       !users.includes(user)
       // tiktok-th3edt-PPaidPartnership
@@ -128,13 +134,17 @@ async function scraper(inputBrand = "Nike") {
         elements.map((element) => element.innerText)
       )) || "";
 
-    console.log("userlink:", userLink);
+    let userAvatar =
+      (await page.$$eval('div[data-e2e="user-avatar"] img[src]', (elements) =>
+        elements.map((element) => element.getAttribute("src"))
+      )) || "";
 
     let userObj = {
       username: users[i],
       followers: followerCount,
       bio: userBio === "" ? "" : userBio[0],
       link: userLink === "" ? "" : userLink[0],
+      userAvatar: userAvatar === "" ? "" : userAvatar[0],
       profileLink: `https://www.tiktok.com/@${encodeURIComponent(users[i])}`,
     };
 
@@ -175,6 +185,16 @@ async function scraper(inputBrand = "Nike") {
   //     console.log("It's saved!");
   //   }
   // });
+
+  const jsonData = JSON.stringify(userObjs);
+
+  fs.writeFile(`${inputBrand}-userObjs.json`, jsonData, (err) => {
+    if (err) {
+      console.error(err);
+      return;
+    }
+    console.log(`${inputBrand} data written to file`);
+  });
 
   return userObjs;
 }
